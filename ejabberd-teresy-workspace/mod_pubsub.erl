@@ -3334,7 +3334,7 @@ get_resource_state({U, S, R}, ShowValues, JIDs) ->
     case ejabberd_sm:get_session_pid(U, S, R) of
       none ->
 	  %% If no PID, item can be delivered
-	  lists:append([{U, S, R}], JIDs);
+	  [{U, S, R}] ++ JIDs;
       Pid ->
 	  Show = case ejabberd_c2s:get_presence(Pid) of
 		   #presence{type = unavailable} -> <<"unavailable">>;
@@ -3343,7 +3343,7 @@ get_resource_state({U, S, R}, ShowValues, JIDs) ->
 		 end,
 	  case lists:member(Show, ShowValues) of
 	    %% If yes, item can be delivered
-	    true -> lists:append([{U, S, R}], JIDs);
+	    true -> [{U, S, R}] ++ JIDs;
 	    %% If no, item can't be delivered
 	    false -> JIDs
 	  end
