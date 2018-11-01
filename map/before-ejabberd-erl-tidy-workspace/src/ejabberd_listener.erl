@@ -634,7 +634,7 @@ validate_opts(Mod, Opts) ->
 						end
 					end,
 					Defaults, Opts),
-    case lists:filter(fun is_atom/1, Defaults1) of
+    case [V1 || V1 <- Defaults1, fun is_atom/1(V1)] of
       [] -> lists:flatten(Opts1);
       MissingRequiredOpts ->
 	  ?ERROR_MSG("Missing required listening option(s): ~s",
