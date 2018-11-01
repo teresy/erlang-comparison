@@ -88,7 +88,8 @@ set_lists(#privacy{us = {LUser, LServer},
 				      {selected, [<<"id">>], [[I]]} =
 					  get_privacy_list_id_t(LUser, LServer,
 								Name),
-				      RItems = [item_to_raw(V1) || V1 <- List],
+				      RItems = lists:map(fun item_to_raw/1,
+							 List),
 				      set_privacy_list(I, RItems),
 				      if is_binary(Default) ->
 					     set_default_privacy_list(LUser,
@@ -102,7 +103,7 @@ set_lists(#privacy{us = {LUser, LServer},
     transaction(LServer, F).
 
 set_list(LUser, LServer, Name, List) ->
-    RItems = [item_to_raw(V1) || V1 <- List],
+    RItems = lists:map(fun item_to_raw/1, List),
     F = fun () ->
 		ID = case get_privacy_list_id_t(LUser, LServer, Name) of
 		       {selected, []} ->
@@ -199,7 +200,8 @@ export(Server) ->
 	      end
 		++
 		lists:flatmap(fun ({Name, List}) ->
-				      RItems = [item_to_raw(V1) || V1 <- List],
+				      RItems = lists:map(fun item_to_raw/1,
+							 List),
 				      ID = get_id(),
 				      [?SQL("delete from privacy_list where username=%(LUs"
 					    "er)s and %(LServer)H and name=%(Name)s;"),

@@ -225,7 +225,7 @@ process_list_get(#iq{from =
 		 Name) ->
     case get_user_list(LUser, LServer, Name) of
       {ok, {_, List}} ->
-	  Items = [encode_list_item(V1) || V1 <- List],
+	  Items = lists:map(fun encode_list_item/1, List),
 	  xmpp:make_iq_result(IQ,
 			      #privacy_query{lists =
 						 [#privacy_list{name = Name,
@@ -414,7 +414,7 @@ process_lists_set(#iq{from =
 		      lang = Lang} =
 		      IQ,
 		  Name, Items) ->
-    case catch [decode_item(V1) || V1 <- Items] of
+    case catch lists:map(fun decode_item/1, Items) of
       {error, Why} ->
 	  Txt = xmpp:io_format_error(Why),
 	  xmpp:make_error(IQ, xmpp:err_bad_request(Txt, Lang));

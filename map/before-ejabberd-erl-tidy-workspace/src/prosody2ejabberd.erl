@@ -241,8 +241,9 @@ convert_data(Host, "privacy", User, [Data]) ->
 					      Items =
 						  proplists:get_value(<<"items">>,
 								      Vals, []),
-					      case [convert_privacy_item(V1)
-						    || V1 <- Items]
+					      case
+						lists:map(fun convert_privacy_item/1,
+							  Items)
 						  of
 						[] -> [];
 						ListItems -> [{Name, ListItems}]

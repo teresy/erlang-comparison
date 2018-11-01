@@ -233,7 +233,7 @@ get_offline(User, Server) ->
     case mod_offline:get_offline_els(LUser, LServer) of
       [] -> [];
       Els ->
-	  NewEls = [fun xmpp:encode/1(V1) || V1 <- Els],
+	  NewEls = lists:map(fun xmpp:encode/1, Els),
 	  [#xmlel{name = <<"offline-messages">>,
 		  children = NewEls}]
     end.

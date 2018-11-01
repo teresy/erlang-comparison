@@ -646,8 +646,8 @@ parse_ip_netmask(S) ->
 
 transform_access_rules_config(Config)
     when is_list(Config) ->
-    [transform_access_rules_config2(V1)
-     || V1 <- lists:flatten(Config)];
+    lists:map(fun transform_access_rules_config2/1,
+	      lists:flatten(Config));
 transform_access_rules_config(Config) ->
     transform_access_rules_config([Config]).
 

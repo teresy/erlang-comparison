@@ -581,9 +581,8 @@ handle_sync_event({process_item_change, Item, UJID},
     end;
 handle_sync_event(get_subscribers, _From, StateName,
 		  StateData) ->
-    JIDs = [fun jid:make/1(V1)
-	    || V1
-		   <- (?DICT):fetch_keys(StateData#state.subscribers)],
+    JIDs = lists:map(fun jid:make/1,
+		     (?DICT):fetch_keys(StateData#state.subscribers)),
     {reply, {ok, JIDs}, StateName, StateData};
 handle_sync_event({muc_subscribe, From, Nick, Nodes},
 		  _From, StateName, StateData) ->

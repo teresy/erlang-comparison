@@ -539,7 +539,7 @@ transform_options(Opt, Opts) -> [Opt | Opts].
 
 
 validate_cfg(Listeners) ->
-    Listeners1 = [validate_opts(V1) || V1 <- Listeners],
+    Listeners1 = lists:map(fun validate_opts/1, Listeners),
     Listeners2 = lists:keysort(1, Listeners1),
     check_overlapping_listeners(Listeners2).
 
@@ -634,7 +634,7 @@ validate_opts(Mod, Opts) ->
 						end
 					end,
 					Defaults, Opts),
-    case [V1 || V1 <- Defaults1, fun is_atom/1(V1)] of
+    case lists:filter(fun is_atom/1, Defaults1) of
       [] -> lists:flatten(Opts1);
       MissingRequiredOpts ->
 	  ?ERROR_MSG("Missing required listening option(s): ~s",

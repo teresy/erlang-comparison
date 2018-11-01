@@ -334,9 +334,8 @@ make_sql_query(State) ->
 											   none,
 											   [erl_syntax:list(State#state.args)])])),
 			    erl_syntax:record_field(erl_syntax:atom(format_query),
-						    erl_syntax:fun_expr([erl_syntax:clause([erl_syntax:list([make_var(V2)
-													     || V2
-														    <- State#state.params])],
+						    erl_syntax:fun_expr([erl_syntax:clause([erl_syntax:list(lists:map(fun make_var/1,
+														      State#state.params))],
 											   none,
 											   [erl_syntax:list(EQuery)])])),
 			    erl_syntax:record_field(erl_syntax:atom(format_res),

@@ -54,8 +54,8 @@ read_subscription(SubID) ->
 	  {ok,
 	   #pubsub_subscription{subid = SubID,
 				options =
-				    [subscription_opt_from_sql(V1)
-				     || V1 <- Options]}}
+				    lists:map(fun subscription_opt_from_sql/1,
+					      Options)}}
     end.
 
 %% -spec delete_subscription(SubID :: string()) -> ok.

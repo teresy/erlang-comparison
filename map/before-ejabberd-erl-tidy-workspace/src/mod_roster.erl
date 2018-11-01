@@ -324,22 +324,20 @@ process_iq_get(#iq{to = To, lang = Lang,
 						   RosterVersion =
 						       write_roster_version(LUser,
 									    LServer),
-						   {[encode_item(V1)
-						     || V1
-							    <- ejabberd_hooks:run_fold(roster_get,
-										       To#jid.lserver,
-										       [],
-										       [US])],
+						   {lists:map(fun encode_item/1,
+							      ejabberd_hooks:run_fold(roster_get,
+										      To#jid.lserver,
+										      [],
+										      [US])),
 						    RosterVersion};
 					       {ok, RequestedVersion} ->
 						   {false, false};
 					       {ok, NewVersion} ->
-						   {[encode_item(V2)
-						     || V2
-							    <- ejabberd_hooks:run_fold(roster_get,
-										       To#jid.lserver,
-										       [],
-										       [US])],
+						   {lists:map(fun encode_item/1,
+							      ejabberd_hooks:run_fold(roster_get,
+										      To#jid.lserver,
+										      [],
+										      [US])),
 						    NewVersion}
 					     end;
 					 {true, false}
@@ -354,17 +352,16 @@ process_iq_get(#iq{to = To, lang = Lang,
 					       RequestedVersion ->
 						   {false, false};
 					       New ->
-						   {[encode_item(V3)
-						     || V3 <- RosterItems],
+						   {lists:map(fun encode_item/1,
+							      RosterItems),
 						    New}
 					     end;
 					 _ ->
-					     {[encode_item(V4)
-					       || V4
-						      <- ejabberd_hooks:run_fold(roster_get,
-										 To#jid.lserver,
-										 [],
-										 [US])],
+					     {lists:map(fun encode_item/1,
+							ejabberd_hooks:run_fold(roster_get,
+										To#jid.lserver,
+										[],
+										[US])),
 					      false}
 				       end,
 	xmpp:make_iq_result(IQ,
