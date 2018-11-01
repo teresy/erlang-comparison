@@ -16,7 +16,9 @@ echo "Diffs" ${EQUAL}
 
 cd ejabberd-erl-tidy-workspace
 git checkout -- .
+cd ..
 
 cd ejabberd-teresy-workspace
 git checkout -- .
+cd ..
 
