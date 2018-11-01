@@ -1,0 +1,220 @@
+diff --git a/src/acl.erl b/src/acl.erl
+index 180346e..5efdda2 100644
+--- a/src/acl.erl
++++ b/src/acl.erl
+@@ -649,8 +646,8 @@ parse_ip_netmask(S) ->
+ 
+ transform_access_rules_config(Config)
+     when is_list(Config) ->
+-    lists:map(fun transform_access_rules_config2/1,
+-	      lists:flatten(Config));
++    [transform_access_rules_config2(V1)
++     || V1 <- lists:flatten(Config)];
+ transform_access_rules_config(Config) ->
+     transform_access_rules_config([Config]).
+ 
+diff --git a/src/ejabberd_listener.erl b/src/ejabberd_listener.erl
+index ff93c69..272f00d 100644
+--- a/src/ejabberd_listener.erl
++++ b/src/ejabberd_listener.erl
+@@ -539,7 +539,7 @@ transform_options(Opt, Opts) -> [Opt | Opts].
+ 
+ 
+ validate_cfg(Listeners) ->
+-    Listeners1 = lists:map(fun validate_opts/1, Listeners),
++    Listeners1 = [validate_opts(V1) || V1 <- Listeners],
+     Listeners2 = lists:keysort(1, Listeners1),
+     check_overlapping_listeners(Listeners2).
+diff --git a/src/ejabberd_piefxis.erl b/src/ejabberd_piefxis.erl
+index 1af5d6f..336c5a5 100644
+--- a/src/ejabberd_piefxis.erl
++++ b/src/ejabberd_piefxis.erl
+@@ -233,7 +233,7 @@ get_offline(User, Server) ->
+     case mod_offline:get_offline_els(LUser, LServer) of
+       [] -> [];
+       Els ->
+-	  NewEls = lists:map(fun xmpp:encode/1, Els),
++	  NewEls = [fun xmpp:encode/1(V1) || V1 <- Els],
+ 	  [#xmlel{name = <<"offline-messages">>,
+ 		  children = NewEls}]
+     end.
+diff --git a/src/ejabberd_sql_pt.erl b/src/ejabberd_sql_pt.erl
+index 999da4e..9db7100 100644
+--- a/src/ejabberd_sql_pt.erl
++++ b/src/ejabberd_sql_pt.erl
+@@ -338,8 +334,9 @@ make_sql_query(State) ->
+ 											   none,
+ 											   [erl_syntax:list(State#state.args)])])),
+ 			    erl_syntax:record_field(erl_syntax:atom(format_query),
+-						    erl_syntax:fun_expr([erl_syntax:clause([erl_syntax:list(lists:map(fun make_var/1,
+-														      State#state.params))],
++						    erl_syntax:fun_expr([erl_syntax:clause([erl_syntax:list([make_var(V2)
++													     || V2
++														    <- State#state.params])],
+ 											   none,
+ 											   [erl_syntax:list(EQuery)])])),
+ 			    erl_syntax:record_field(erl_syntax:atom(format_res),
+diff --git a/src/mod_muc_room.erl b/src/mod_muc_room.erl
+index 0bdd960..2a88fdb 100644
+--- a/src/mod_muc_room.erl
++++ b/src/mod_muc_room.erl
+@@ -581,8 +581,9 @@ handle_sync_event({process_item_change, Item, UJID},
+     end;
+ handle_sync_event(get_subscribers, _From, StateName,
+ 		  StateData) ->
+-    JIDs = lists:map(fun jid:make/1,
+-		     (?DICT):fetch_keys(StateData#state.subscribers)),
++    JIDs = [fun jid:make/1(V1)
++	    || V1
++		   <- (?DICT):fetch_keys(StateData#state.subscribers)],
+     {reply, {ok, JIDs}, StateName, StateData};
+ handle_sync_event({muc_subscribe, From, Nick, Nodes},
+ 		  _From, StateName, StateData) ->
+diff --git a/src/mod_privacy.erl b/src/mod_privacy.erl
+index 2221cc9..2345a3e 100644
+--- a/src/mod_privacy.erl
++++ b/src/mod_privacy.erl
+@@ -225,7 +225,7 @@ process_list_get(#iq{from =
+ 		 Name) ->
+     case get_user_list(LUser, LServer, Name) of
+       {ok, {_, List}} ->
+-	  Items = lists:map(fun encode_list_item/1, List),
++	  Items = [encode_list_item(V1) || V1 <- List],
+ 	  xmpp:make_iq_result(IQ,
+ 			      #privacy_query{lists =
+ 						 [#privacy_list{name = Name,
+@@ -414,7 +414,7 @@ process_lists_set(#iq{from =
+ 		      lang = Lang} =
+ 		      IQ,
+ 		  Name, Items) ->
+-    case catch lists:map(fun decode_item/1, Items) of
++    case catch [decode_item(V1) || V1 <- Items] of
+       {error, Why} ->
+ 	  Txt = xmpp:io_format_error(Why),
+ 	  xmpp:make_error(IQ, xmpp:err_bad_request(Txt, Lang));
+diff --git a/src/mod_privacy_sql.erl b/src/mod_privacy_sql.erl
+index 6f73efa..3efdb49 100644
+--- a/src/mod_privacy_sql.erl
++++ b/src/mod_privacy_sql.erl
+@@ -88,8 +88,7 @@ set_lists(#privacy{us = {LUser, LServer},
+ 				      {selected, [<<"id">>], [[I]]} =
+ 					  get_privacy_list_id_t(LUser, LServer,
+ 								Name),
+-				      RItems = lists:map(fun item_to_raw/1,
+-							 List),
++				      RItems = [item_to_raw(V1) || V1 <- List],
+ 				      set_privacy_list(I, RItems),
+ 				      if is_binary(Default) ->
+ 					     set_default_privacy_list(LUser,
+@@ -103,7 +102,7 @@ set_lists(#privacy{us = {LUser, LServer},
+     transaction(LServer, F).
+ 
+ set_list(LUser, LServer, Name, List) ->
+-    RItems = lists:map(fun item_to_raw/1, List),
++    RItems = [item_to_raw(V1) || V1 <- List],
+     F = fun () ->
+ 		ID = case get_privacy_list_id_t(LUser, LServer, Name) of
+ 		       {selected, []} ->
+@@ -200,8 +199,7 @@ export(Server) ->
+ 	      end
+ 		++
+ 		lists:flatmap(fun ({Name, List}) ->
+-				      RItems = lists:map(fun item_to_raw/1,
+-							 List),
++				      RItems = [item_to_raw(V1) || V1 <- List],
+ 				      ID = get_id(),
+ 				      [?SQL("delete from privacy_list where username=%(LUs"
+ 					    "er)s and %(LServer)H and name=%(Name)s;"),
+diff --git a/src/mod_roster.erl b/src/mod_roster.erl
+index 99c114e..f9e77c2 100644
+--- a/src/mod_roster.erl
++++ b/src/mod_roster.erl
+@@ -324,20 +324,22 @@ process_iq_get(#iq{to = To, lang = Lang,
+ 						   RosterVersion =
+ 						       write_roster_version(LUser,
+ 									    LServer),
+-						   {lists:map(fun encode_item/1,
+-							      ejabberd_hooks:run_fold(roster_get,
+-										      To#jid.lserver,
+-										      [],
+-										      [US])),
++						   {[encode_item(V1)
++						     || V1
++							    <- ejabberd_hooks:run_fold(roster_get,
++										       To#jid.lserver,
++										       [],
++										       [US])],
+ 						    RosterVersion};
+ 					       {ok, RequestedVersion} ->
+ 						   {false, false};
+ 					       {ok, NewVersion} ->
+-						   {lists:map(fun encode_item/1,
+-							      ejabberd_hooks:run_fold(roster_get,
+-										      To#jid.lserver,
+-										      [],
+-										      [US])),
++						   {[encode_item(V2)
++						     || V2
++							    <- ejabberd_hooks:run_fold(roster_get,
++										       To#jid.lserver,
++										       [],
++										       [US])],
+ 						    NewVersion}
+ 					     end;
+ 					 {true, false}
+@@ -352,16 +354,17 @@ process_iq_get(#iq{to = To, lang = Lang,
+ 					       RequestedVersion ->
+ 						   {false, false};
+ 					       New ->
+-						   {lists:map(fun encode_item/1,
+-							      RosterItems),
++						   {[encode_item(V3)
++						     || V3 <- RosterItems],
+ 						    New}
+ 					     end;
+ 					 _ ->
+-					     {lists:map(fun encode_item/1,
+-							ejabberd_hooks:run_fold(roster_get,
+-										To#jid.lserver,
+-										[],
+-										[US])),
++					     {[encode_item(V4)
++					       || V4
++						      <- ejabberd_hooks:run_fold(roster_get,
++										 To#jid.lserver,
++										 [],
++										 [US])],
+ 					      false}
+ 				       end,
+ 	xmpp:make_iq_result(IQ,
+diff --git a/src/prosody2ejabberd.erl b/src/prosody2ejabberd.erl
+index 5f97ef9..3b03c44 100644
+--- a/src/prosody2ejabberd.erl
++++ b/src/prosody2ejabberd.erl
+@@ -241,9 +241,8 @@ convert_data(Host, "privacy", User, [Data]) ->
+ 					      Items =
+ 						  proplists:get_value(<<"items">>,
+ 								      Vals, []),
+-					      case
+-						lists:map(fun convert_privacy_item/1,
+-							  Items)
++					      case [convert_privacy_item(V1)
++						    || V1 <- Items]
+ 						  of
+ 						[] -> [];
+ 						ListItems -> [{Name, ListItems}]
+diff --git a/src/pubsub_db_sql.erl b/src/pubsub_db_sql.erl
+index 48c13fc..5e73ee8 100644
+--- a/src/pubsub_db_sql.erl
++++ b/src/pubsub_db_sql.erl
+@@ -54,8 +54,8 @@ read_subscription(SubID) ->
+ 	  {ok,
+ 	   #pubsub_subscription{subid = SubID,
+ 				options =
+-				    lists:map(fun subscription_opt_from_sql/1,
+-					      Options)}}
++				    [subscription_opt_from_sql(V1)
++				     || V1 <- Options]}}
+     end.
+ 
+ %% -spec delete_subscription(SubID :: string()) -> ok.
